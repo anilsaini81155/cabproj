@@ -48,7 +48,7 @@ Below file has SQL Commands + REST API Urls to generate and set the data.
 
 
 	-b)To deactivate coupon code
-		URL => http://localhost/cabproj/index.php/PromoVoucher/deactivateCouponCode_put
+		URL => http://localhost/cabproj/index.php/PromoVoucher/deactivateCouponCode_post
 
 		Input:
 			event_coupon_code => length(10,15)
@@ -61,7 +61,7 @@ Below file has SQL Commands + REST API Urls to generate and set the data.
 		URL => http://localhost/cabproj/index.php/PromoVoucher/getAllPromoCodes_get
 
 	-e)Check PickUpDrop Radius
-		URL => http://localhost/cabproj/index.php/PromoVoucher/radiusCheckPickUpDrop_get
+		URL => http://localhost/cabproj/index.php/PromoVoucher/radiusCheckPickUpDrop_post
 
 		Input:
 			event_coupon_code => length(10,15)
@@ -72,14 +72,14 @@ Below file has SQL Commands + REST API Urls to generate and set the data.
 
 
 	-f)Update Radius
-		URL => http://localhost/cabproj/index.php/PromoVoucher/configureRadius_put
+		URL => http://localhost/cabproj/index.php/PromoVoucher/configureRadius_post
 
 		Input:
 			event_coupon_code  => length(10,15)
 			radius => numeric
 
 	-g)Promo Code Details
-		URL => http://localhost/cabproj/index.php/PromoVoucher/getPromoCodeDetails_get
+		URL => http://localhost/cabproj/index.php/PromoVoucher/getPromoCodeDetails_post
 
 		Input:
 			event_coupon_code => => length(10,15)

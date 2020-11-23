@@ -1,5 +1,7 @@
 <?php
 
+(defined('BASEPATH')) OR exit('No direct script access allowed');
+
 require APPPATH . '/libraries/REST_Controller.php';
 
 use Restserver\Libraries\REST_Controller;
@@ -62,7 +64,7 @@ class PromoVoucher extends REST_Controller {
             $res .= $chars[mt_rand(0, strlen($chars) - 1)];
         }
 
-        $code = $this->Api_model->select_single('event_promo_code', '', 'promo')['event_promo_code'];
+        $code = $this->Api_model->select_single('event_coupon_code', '', 'promo')['event_promo_code'];
         if ($code) {
             $this->generateRandomNumber($eventName);
         } else {
@@ -108,14 +110,14 @@ class PromoVoucher extends REST_Controller {
         }
     }
 
-    public function deactivateCouponCode_put() {
+    public function deactivateCouponCode_post() {
         if ($this->post('event_coupon_code')) {
 
             $this->form_validation->set_rules('event_coupon_code', 'event_coupon_code', 'trim|required|min_length[10]|max_length[15]');
             if ($this->form_validation->run() === TRUE) {
-                if ($this->Api_model->select_single('event_promo_code', '', 'promo')['event_promo_code']) {
+                if ($this->Api_model->select_single('event_coupon_code', array('event_coupon_code' => $this->post('event_coupon_code')), 'promo')['event_coupon_code']) {
                     $this->db->trans_start();
-                    $this->Api_model->upate(array('status' => 2, 'modified_datetime' => date('Y-m-d H:i:s')), array('event_promo_code' => $this->post('event_coupon_code')), 'promo');
+                    $this->Api_model->update(array('promocode_status' => 2, 'modified_datetime' => date('Y-m-d H:i:s')), array('event_coupon_code' => $this->post('event_coupon_code')), 'promo');
                     $this->db->trans_complete();
                     $this->response(array('status' => 1, 'msg' => 'Coupon Code Deactivated'), REST_Controller::HTTP_OK);
                 } else {
@@ -134,37 +136,34 @@ class PromoVoucher extends REST_Controller {
     }
 
     public function getActivePromoCodes_get() {
-        $promoCodes = $this->Api_model->select_multiple('event_promo_code', array('status' => 1), 'promo');
+        $promoCodes = $this->Api_model->select_multiple('event_coupon_code', array('promocode_status' => 1), 'promo');
         $promoCodes['status'] = 1;
         $this->response($promoCodes, REST_Controller::HTTP_OK);
     }
 
     public function getAllPromoCodes_get() {
-        $promoCodes = $this->Api_model->select_multiple('event_promo_code', '', 'promo');
+        $promoCodes = $this->Api_model->select_multiple('event_coupon_code', '', 'promo');
         $promoCodes['status'] = 1;
         $this->response($promoCodes, REST_Controller::HTTP_OK);
     }
 
-    public function radiusCheckPickUpDrop_get() {
+    public function radiusCheckPickUpDrop_post() {
         if ($this->post('event_coupon_code') && $this->post('dest_lat') && $this->post('dest_long') && $this->post('pickup_lat') && $this->post('pickup_long')) {
-
-
             $this->form_validation->set_rules('event_coupon_code', 'event_coupon_code', 'trim|required|min_length[10]|max_length[15]');
             $this->form_validation->set_rules('dest_long', 'dest_long', 'trim|required|callback_check_longitude');
             $this->form_validation->set_rules('dest_lat', 'dest_lat', 'trim|required|callback_check_latitude');
             $this->form_validation->set_rules('pickup_long', 'pickup_long', 'trim|required|callback_check_longitude');
             $this->form_validation->set_rules('pickup_lat', 'pickup_lat', 'trim|required|callback_check_latitude');
             if ($this->form_validation->run() === TRUE) {
-                if ($this->Api_model->select_single('event_promo_code', array('status' => 1, 'event_promo_code' => $this->post('event_coupon_code')), 'promo')) {
-                    $data = $this->Api_model->select_single('*', array('status' => 1, 'event_promo_code' => $this->post('event_coupon_code')), 'promo');
-                    $data = $data[0];
+                if ($this->Api_model->select_single('event_coupon_code', array('promocode_status' => 1, 'event_coupon_code' => $this->post('event_coupon_code')), 'promo')) {
+                    $data = $this->Api_model->select_single('*', array('promocode_status' => 1, 'event_coupon_code' => $this->post('event_coupon_code')), 'promo');
                     $destCheck = $this->distance($this->post('dest_lat'), $this->post('dest_long'), $data['event_latitude'], $data['event_longitude']);
                     $pickUpCheck = $this->distance($this->post('pickup_lat'), $this->post('pickup_long'), $data['event_latitude'], $data['event_longitude']);
 
                     if (($destCheck <= $data['promocode_radius']) || ($pickUpCheck <= $data['promocode_radius'])) {
                         $this->response(array('status' => 1, 'msg' => 'Within Radius'), REST_Controller::HTTP_OK);
                     } else {
-                        $this->response(array('status' => 2, 'msg' => 'Ouside Radius'), REST_Controller::HTTP_OK);
+                        $this->response(array('status' => 2, 'msg' => 'Outside Radius'), REST_Controller::HTTP_OK);
                     }
                 } else {
                     $this->response(array('status' => 2, 'msg' => 'Coupon Code Does Not Exist'), REST_Controller::HTTP_UNPROCESSABLE_ENTITY);
@@ -190,20 +189,18 @@ class PromoVoucher extends REST_Controller {
             $dist = acos($dist);
             $dist = rad2deg($dist);
             $miles = $dist * 60 * 1.1515;
-            $unit = strtoupper($unit);
-
             return ($miles * 1.609344);
         }
     }
 
-    public function configureRadius_put() {
+    public function configureRadius_post() {
         if ($this->post('event_coupon_code') && $this->post('radius')) {
 
             $this->form_validation->set_rules('event_coupon_code', 'event_coupon_code', 'trim|required|min_length[10]|max_length[15]');
             $this->form_validation->set_rules('radius', 'radius', 'trim|required|numeric');
             if ($this->form_validation->run() === TRUE) {
-                if ($this->Api_model->select_single('event_promo_code', array('status' => 1, 'event_promo_code' => $this->post('event_coupon_code')), 'promo')) {
-                    $this->Api_model->update(array('radius' => $this->post('radius')), array('status' => 1, 'event_promo_code' => $this->post('event_coupon_code')), 'event_promo_code');
+                if ($this->Api_model->select_single('event_coupon_code', array('promocode_status' => 1, 'event_coupon_code' => $this->post('event_coupon_code')), 'promo')) {
+                    $this->Api_model->update(array('promocode_radius' => $this->post('radius')), array('promocode_status' => 1, 'event_coupon_code' => $this->post('event_coupon_code')), 'promo');
                     $this->response(array('status' => 1, 'msg' => 'Radius Updated'), REST_Controller::HTTP_OK);
                 } else {
                     $this->response(array('status' => 2, 'msg' => 'Radius Not Updated || Promo Code Doecnot Existr'), REST_Controller::HTTP_OK);
@@ -220,7 +217,7 @@ class PromoVoucher extends REST_Controller {
         }
     }
 
-    public function getPromoCodeDetails_get() {
+    public function getPromoCodeDetails_post() {
         if ($this->post('event_coupon_code') && $this->post('dest_lat') && $this->post('dest_long') && $this->post('pickup_lat') && $this->post('pickup_long')) {
 
             $this->form_validation->set_rules('dest_long', 'event_longitude', 'trim|required|callback_check_longitude');
@@ -230,19 +227,15 @@ class PromoVoucher extends REST_Controller {
             $this->form_validation->set_rules('event_coupon_code', 'event_coupon_code', 'trim|required|min_length[10]|max_length[15]');
 
             if ($this->form_validation->run() === TRUE) {
-
-                if ($this->Api_model->select_single('event_promo_code', array('status' => 1, 'event_promo_code' => $this->post('event_coupon_code')), 'promo')) {
-
-                    $data = $this->Api_model->select_single('*', array('status' => 1, 'event_promo_code' => $this->post('event_coupon_code')), 'promo');
-                    $data = $data[0];
-
+                if ($this->Api_model->select_single('event_coupon_code', array('promocode_status' => 1, 'event_coupon_code' => $this->post('event_coupon_code')), 'promo')) {
+                    $data = $this->Api_model->select_single('*', array('promocode_status' => 1, 'event_coupon_code' => $this->post('event_coupon_code')), 'promo');
                     $responseData = array(
-                        'event_promo_code' => $this->post('event_coupon_code'),
-                        'promocode_validity_start' => $this->post('promocode_validity_start'),
-                        'promocode_validity_end' => $this->post('promocode_validity_end'),
-                        'promocode_amount' => $this->post('promocode_amount'),
-                        'promocode_status' => $this->post('promocode_status'),
-                        'promocode_radius' => $this->post('promocode_radius'),
+                        'event_coupon_code' => $this->post('event_coupon_code'),
+                        'promocode_validity_start' => $data['promocode_validity_start'],
+                        'promocode_validity_end' => $data['promocode_validity_end'],
+                        'promocode_amount' => $data['promocode_amount'],
+                        'promocode_status' => $data['promocode_status'],
+                        'promocode_radius' => $data['promocode_radius'],
                         'zoom' => 10,
                         'mapTypeId' => 'roadmap',
                         'center' => array('lat' => $data['event_latitude'], 'long' => $data['event_longitude']),
@@ -265,4 +258,5 @@ class PromoVoucher extends REST_Controller {
             $this->response(array('status' => 2, 'msg' => 'Arguments Not Provided'), REST_Controller::HTTP_PARTIAL_CONTENT);
         }
     }
+
 }

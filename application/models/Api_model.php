@@ -1,14 +1,15 @@
 <?php
 
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
+(defined('BASEPATH')) OR exit('No direct script access allowed');
 
-class Api_model {
+class Api_model extends CI_Model {
+
+    public function __construct() {
+        parent::__construct();
+    }
 
     function select_single($select, $where, $table) {
+
         if (!empty($select)) {
             $this->db->select($select);
         }
@@ -53,33 +54,6 @@ class Api_model {
         }
 
         return $this->db->update($table, $data);
-    }
-
-    function select_single_finite_set($select, $where1, $where2, $table) {
-        if (!empty($select)) {
-            $this->db->select($select);
-        }
-
-        if (!empty($where1) && !empty($where2)) {
-            $this->db->where($where1);
-            $this->db->where($where2);
-        }
-
-        return $this->db->get($table)->row_array();
-    }
-
-    function select_multiple_count($select, $where, $table) {
-        if (!empty($select)) {
-            $this->db->select($select);
-        }
-
-        if (!empty($where)) {
-            $this->db->where($where);
-        }
-
-        $this->db->from($table);
-
-        return $this->db->count_all_results();
     }
 
     function delete($where, $table) {
