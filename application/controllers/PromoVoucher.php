@@ -14,6 +14,8 @@ class PromoVoucher extends REST_Controller {
         $this->load->library('form_validation');
     }
 
+    //Below FUNC Accepts the event name , event's longitutde/latitude ,promo validity start/end date ,amount 
+    //status and raidus and return the status with promocode
     public function generateNewPromoCode_post() {
         if ($this->post('event_name') && $this->post('event_longitude') && $this->post('event_latitude') && $this->post('promocode_validity_start') && $this->post('promocode_validity_end') && $this->post('promocode_amount') && $this->post('promocode_status') && $this->post('promocode_radius')) {
 
@@ -57,6 +59,7 @@ class PromoVoucher extends REST_Controller {
         }
     }
 
+    //Below FUNC generates the randome number from event name , 3 chars are taken from event name and 7 chars are dynamic
     public function generateRandomNumber($eventName) {
         $chars = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
         $res = substr($eventName, 0, 3);
@@ -72,6 +75,7 @@ class PromoVoucher extends REST_Controller {
         }
     }
 
+    //Below Func is an callback function of promo code gen part , it checks the validity of the the start date.
     public function start_date_validity_check($dob) {
         $dob = explode('-', $dob);
         if (($dob[0] >= 1 && $dob[0] <= 31) && ($dob[1] >= 1 && $dob[1] <= 12) && ($dob[2] >= date("Y"))) {
@@ -82,6 +86,7 @@ class PromoVoucher extends REST_Controller {
         }
     }
 
+    //Below Func is an callback function of promo code gen part , it checks the validity of the the end date.
     public function end_date_validity_check($dob) {
         $dob = explode('-', $dob);
         if (($dob[0] >= 1 && $dob[0] <= 31) && ($dob[1] >= 1 && $dob[1] <= 12) && ($dob[2] >= date("Y"))) {
@@ -92,6 +97,7 @@ class PromoVoucher extends REST_Controller {
         }
     }
 
+    //Below function is an callback function of the event promo code gen part , it check the latitude value.
     public function check_latitude($lat) {
         if (preg_match('/^(\+|-)?(?:90(?:(?:\.0{1,6})?)|(?:[0-9]|[1-8][0-9])(?:(?:\.[0-9]{1,6})?))$/', $lat)) {
             return TRUE;
@@ -101,15 +107,17 @@ class PromoVoucher extends REST_Controller {
         }
     }
 
+    //Below function is an callback function of the event promo code gen part , it check the longitude value.
     public function check_longitude($long) {
         if (preg_match('/^(\+|-)?(?:180(?:(?:\.0{1,6})?)|(?:[0-9]|[1-9][0-9]|1[0-7][0-9])(?:(?:\.[0-9]{1,6})?))$/', $long)) {
             return TRUE;
         } else {
-            $this->form_validation->set_message('check_latitude', 'Enter Valid Latitude');
+            $this->form_validation->set_message('check_longitude', 'Enter Valid Longitude');
             return FALSE;
         }
     }
 
+    //Below function deactivates the given promo code
     public function deactivateCouponCode_post() {
         if ($this->post('event_coupon_code')) {
 
@@ -135,18 +143,21 @@ class PromoVoucher extends REST_Controller {
         }
     }
 
+    //Below Func returns the active promo codes in the table.
     public function getActivePromoCodes_get() {
         $promoCodes = $this->Api_model->select_multiple('event_coupon_code', array('promocode_status' => 1), 'promo');
         $promoCodes['status'] = 1;
         $this->response($promoCodes, REST_Controller::HTTP_OK);
     }
 
+    //Below Func returns all promo codes in the table with both the status 1/2 => Active/Inactive 
     public function getAllPromoCodes_get() {
         $promoCodes = $this->Api_model->select_multiple('event_coupon_code', '', 'promo');
         $promoCodes['status'] = 1;
         $this->response($promoCodes, REST_Controller::HTTP_OK);
     }
 
+    //Below Function accepts the event coupon code ,dest -> lat/long , pickup -> lat/long and checks whether the src/dest is within the raidus or not.
     public function radiusCheckPickUpDrop_post() {
         if ($this->post('event_coupon_code') && $this->post('dest_lat') && $this->post('dest_long') && $this->post('pickup_lat') && $this->post('pickup_long')) {
             $this->form_validation->set_rules('event_coupon_code', 'event_coupon_code', 'trim|required|min_length[10]|max_length[15]');
@@ -180,6 +191,7 @@ class PromoVoucher extends REST_Controller {
         }
     }
 
+    //Below Func check the distance between two points src/dest and return the diff.
     function distance($lat1, $lon1, $lat2, $lon2) {
         if (($lat1 == $lat2) && ($lon1 == $lon2)) {
             return 0;
@@ -193,6 +205,7 @@ class PromoVoucher extends REST_Controller {
         }
     }
 
+    //Below FUNC configures the radius and accepts the inputs as event coupon code and radius.
     public function configureRadius_post() {
         if ($this->post('event_coupon_code') && $this->post('radius')) {
 
@@ -217,6 +230,8 @@ class PromoVoucher extends REST_Controller {
         }
     }
 
+    //Below Func accepts the event coupon code , src/dest -> last/lon  and return the details about the promo code and 
+    //the string needed to display the polyline on the maps
     public function getPromoCodeDetails_post() {
         if ($this->post('event_coupon_code') && $this->post('dest_lat') && $this->post('dest_long') && $this->post('pickup_lat') && $this->post('pickup_long')) {
 

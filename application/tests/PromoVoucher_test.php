@@ -2,6 +2,7 @@
 
 class PromoVoucher_test extends TestCase {
 
+    //Below Func is the test case for promocode gen part
     public function test_generateNewPromoCode_post() {
         $params = array(
             'event_name' => 'MUSCIC',
@@ -16,9 +17,9 @@ class PromoVoucher_test extends TestCase {
         $ouput = $this->request('POST', ['PromoVoucher', 'generateNewPromoCode_post'], $params);
         $expected = 2;
         $this->assertContains($expected, $ouput['status']);
-//        $this->assertTrue($ouput['couponCode']);
     }
 
+    //Below Func is the test case for deactivate coupon code part
     public function test_deactivateCouponCode_post() {
         $params = array(
             'event_coupon_code' => 'ABC'
@@ -28,16 +29,19 @@ class PromoVoucher_test extends TestCase {
         $this->assertContains($expected, $ouput['status']);
     }
 
+    //Below Func is the test case for to get active promo code part
     public function test_getActivePromoCodes_get() {
         $ouput = $this->request('GET', ['PromoVoucher', 'getActivePromoCodes_get']);
         $this->assertTrue($ouput);
     }
 
+    //Below Func is the test case for to get all promo codes part
     public function test_getAllPromoCodes_get() {
         $ouput = $this->request('GET', ['PromoVoucher', 'getAllPromoCodes_get']);
         $this->assertTrue($ouput);
     }
 
+    //Below Func is the test case for to check the lat/lon is within the raidus of the event
     public function test_radiusCheckPickUpDrop_post() {
         $params = array(
             'event_coupon_code' => 'MUSIC',
@@ -51,6 +55,7 @@ class PromoVoucher_test extends TestCase {
         $this->assertContains($expected, $ouput['status']);
     }
 
+    //Below Func is the test case for configuring the radius
     public function test_configureRadius_post() {
         $params = array(
             'event_coupon_code' => 'MUSIC',
@@ -61,6 +66,7 @@ class PromoVoucher_test extends TestCase {
         $this->assertContains($expected, $ouput['status']);
     }
 
+    //Below Func is the test case for getting promo code details and polyline for maps
     public function test_getPromoCodeDetails_post() {
         $params = array(
             'event_coupon_code' => 'MUSIC',
