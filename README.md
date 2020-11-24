@@ -1,6 +1,8 @@
 This project generates the promo code from the given parameters for an event associated with an rider service.
 This project is build on PHP Codeigniter Framework v3.11.It is an REST API driven.
 
+Test Cases are written in the path => application/tests/PromoVoucher_test.php
+
 Below file has SQL Commands + REST API Urls to generate and set the data.
 
 --1)Use below SQL Commands to generate a table.Make Db name as 'onroad'.
